@@ -1,0 +1,191 @@
+Flask day01
+一.Flask框架
+a.什么是Flask
+  Flask是一个基于python并且依赖与Jinja2模板引擎和Werkzeug,WSGI服务的一个微型框架
+  WSGI:web Server Gateway Interface WEB服务网关接口
+  PythonWeb服务器网关接口(Python Web Server Gateway Interface,缩写为WSGI)是Python应用程序或框架和Web服务器之间的一种接口,已经被广泛接受,它已基本达成它的可移植性方面的目标;WSGI没有官方的实现,因为WSGI更像一个协议;只要遵照这些协议,WSGI应用(Application)都可以在任何服务器(Server)上运行,反之亦然;WSGI标准在PEP333中定义并被许多框架实现,其中包括现广泛使用的django框架
+
+b.Flask的框架模式:MTV
+  M:Models
+  模型层:负责数据库建模,在数据库中对数据进行存取操作(CRUD)
+  T:Templates
+  模板层:主要用于处理用户显示部分的内容,如:html,大多网页都是通过模版显示的
+  V:Views 视图层
+  1.Views处理用户交互部分,接收用户请求
+  2.Views调用Models从模型中获取数据执行CRUD等操作,返回给Views
+  3.Views调用模版再将数据给模板
+  4.Views将数据填充到模版上,再响应,把数据给用户显示
+
+  经典三层结构:MVC,其他编程语言大多数使用这种框架模式
+  M:Models
+  模型层:负责数据库建模,在数据库中对数据进行存取操作(CRUD)
+  V:Views
+  视图层:应用程序中处理显示部分的内容;html,jsp等可视化网页组成的
+  C:Controllers
+  控制器层:协调M和V,处理用户交互的部分,通常负责从模型中取出数据,再进响应操作
+
+c.Flask框架的安装
+1.在线安装:有助于一起安装flask依赖包
+  pip install flask
+  自动安装的包:Successfully installed Werkzeug-0.15.2 click-7.0 flask-1.0.2 itsdangerous-1.1.0;Jinja2-2.10已安装
+
+  pip download flask只下载这些包不安装
+
+2.离线安装:需要自己安装flask所有依赖包
+
+3.查看已安装的flask版本,在python的交互模式中
+  import flask
+  flask.__version__
+
+4.flask官方文档:www.flask.pocoo.org
+
+5.flask是一个微型的框架,功能仅仅就是基本的WEB功能,但它有若干的插件依赖包,可用于扩展功能;基础功能少,第三方扩展功能比较多
+
+d.最简单的flask:
+  from flask import Flask
+
+  #将当前运行得到的主程序构建成Flask的应用,以便可接收用户的请求并给出响应
+  app = Flask(__name__)  
+
+  #@app.route()是定义访问路径,/表示整个网站的根路径
+  #def index()表示匹配上@app.route()路径后的处理程序-视图函数,该类函数必选要有return,return后要给一个字符串或响应对象
+  @app.route('/')
+  def index():
+      return 'this is my first flask'  
+
+  if __name__ == '__main__':
+      #app.run()启动Flask的服务,运行Flask应用,默认在本机开启的端口号是5000,debug=True将当前的启动模式改为调试模式;开发环境中推荐使用调试模式,生产环境中不允许使用调试模式
+      app.run(debug=True)
+
+练习:
+1.访问路径:http://localhost:5000/login,显示'登陆页面'
+2.访问路径:http://localhost:5000/register,显示'注册页面'
+  from flask import Flask
+  app = Flask(__name__)
+
+  @app.route('/login')
+  def login():
+      return '登陆页面'
+
+  @app.route('/register')
+  def register():
+      return '注册页面'
+
+  if __name__ == '__main__':
+      app.run(debug=True) 
+
+二、Flask的路由(route)
+a.什么是路由
+  客户端将请求发送给web服务器,web服务器再将请求发送给flask程序实例;程序实例需要知道每个url请求要运行哪些代码,所以需要建立一个url到python函数的映射,处理url和函数之间的关系的程序就是路由;在flask中,路由是通过@app.route装饰器来表示的
+
+b.路由的体现:
+  1.路由的基本表示
+  @app.route('/'):
+  def index():
+      return
+
+  2.带参数的路由:主体访问路径一致,后面个别访问路径不一致
+  基本带参路由:name表示形参,show中也必须要传入name形参
+    localhost:5000/show/sf.zh
+    localhost:5000/show/wuji.zh
+    localhost:5000/show/zhouzhiruo
+    @app.route('/show/<name>')
+    def show(name):
+        return '这是基本参数路由'
+
+  带多个参数路由:name、age表示形参,show2中也要传入name、age
+    localhost:5000/show2/sf.zh/85
+    localhost:5000/show2/wuji.zh/18
+    localhost:5000/show2/ss.yin/30
+
+    @app.route('/show2/<name>/<age>')
+    def show2(name,age):
+        return '这是带多个参数路由'
+
+    注:地址栏传入的参数都是字符串格式
+
+  指定参数类型的路由:int:age表示传入参数的类型是int类型
+    @app.route('/show3/<name>/<int:age>')
+    def show2(name,age):
+        return '这是带多个参数路由'
+
+    <int:age>:表示age参数是整型的数值类型而并非默认的字符串,int称为类型转换器
+
+  3.flask中所有支持的类型转换器:
+    缺省:字符串类型但不能有/斜杠
+    int,整型
+    float:浮点型
+    path:字符串类型,可以有/斜杠
+  
+  4.多url的路由匹配:允许在一个视图处理函数中设置多个url路由规则
+    @app.route('/')
+    @app.route('/index')
+    @app.route('/<int:page>')
+    def index(page=None):
+        if page is None:
+            page = 1
+        return '多url匹配一个处理函数'
+  5.路由中设置HTTP请求方法:flask路由规则也允许设置对应的请求方法,只有将匹配上请求方法的路径交个视图处理函数去执行;methods是允许请求方式列表,在这个列表中才能访问
+    @app.route('/post',methods=['GET','POST'])
+    def index(page=None):
+        if page is None:
+            page = 1
+        return '设置HTTP请求方法'
+
+c.url的反向解析:
+  正向解析:程序自动解析,根据@app.route的访问路径来匹配处理函数
+  反向解析:通过视图处理函数的名称自动生成视图处理函数的访问路径
+  flask中提供了url_for(参数1,其余参数)函数
+    作用:用于反向解析url
+    第一个参数:指向函数名,通过@app.route修饰的函数
+    后面的参数:对应要构建的url的需要传入的参数
+
+  from flask import Flask,url_for
+  @app.route('/index')
+      def index():
+          return 'index'
+
+  @app.route('/show/<name>')
+      def show(name):
+          return 'name:%ds'%name
+
+  url_for('show',name='zsf') 结果为:/show/zsf
+
+  @app.route('/url')
+  def url_views():
+      logurl = url_for('index')
+      print(logurl) 结果:/index
+      resp = "<a href='"+logurl+"'>我要登陆</a>"
+      return resp
+  
+  静态文件解析:
+  url_for('static', filename='')
+  url_for('static', filename='style.css')
+
+d.flask中的模板-Templates
+  1.什么是模板:
+  模板是一个包含响应文本的文件,通常是html文件,该文件中允许包含'占位变量'来表示动态的内容,其具体值在请求中才知道;'占位变量'最终会被真实的值所替换;模板最终也会被解析成响应的字符串,这一过程称为'渲染'
+
+  Flask实际上是使用Jinja2这个强大的模板引擎
+
+  2.模板的设置:
+  默认情况下,Flask会在程序文件夹中的templates子文件夹中寻找模板;所有需要手动创建templates文件夹,并在其中创建html文件
+
+  3.渲染模板:
+  在视图函数中,通过render_template函数将模板渲染成字符串再响应给客户端
+  render_template('x.html',arg1=value,arg2=value2)
+    x.html为需要响应的模板文件,他会自动在templates文件夹中查找
+    arg1和arg2是为占位变量传入的数据,没有占位变量这可以省略
+    返回值:这个函数的返回值为字符串
+
+  from flask import Flask,render_template
+  @app.route('/index')
+      def index():
+          return render_template('index.html')
+
+  if __name__ == '__main__':
+      app.run(debug=True,port=5555)
+
+注:
+1.port=5555可以重新指定端口号
+2.lorem+tab:伪字符生成键
